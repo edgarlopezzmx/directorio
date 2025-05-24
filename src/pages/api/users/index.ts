@@ -9,14 +9,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const users = await prisma.user.findMany();
             res.status(200).json(users);
         } else if (req.method === "POST") {
-            const { name, email } = req.body;
-            if (!name || !email) {
+            const { name, email, password } = req.body;
+            if (!name || !email || !password) {
                 return res.status(400).json({ error: "Name and email are required" });
             }
             const user = await prisma.user.create({
                 data: {
                     name,
                     email,
+                    password,
                 },
             });
             res.status(201).json(user);
