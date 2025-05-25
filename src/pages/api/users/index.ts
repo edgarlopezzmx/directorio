@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcrypt";
+import { userRegisterSchema } from "@/validations/user";
 
 const prisma = new PrismaClient();
 
@@ -9,18 +11,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             const users = await prisma.user.findMany();
             res.status(200).json(users);
         } else if (req.method === "POST") {
-            const { name, email, password } = req.body;
-            if (!name || !email || !password) {
-                return res.status(400).json({ error: "Name and email are required" });
+            const parsed = userRegisterSchema.safeParse(req.body);            
+            if (!parsed.success) {
+                return res.status(400).json({ error: "Datos inválidos", details: parsed.error.errors });
             }
-            const user = await prisma.user.create({
-                data: {
-                    name,
-                    email,
-                    password,
-                },
-            });
-            res.status(201).json(user);
+
+            const { name, email, password } = parsed.data;
+            try {
+                const hashedPassword = await bcrypt.hash(password, 10);
+                const user = await prisma.user.create({
+                    data: {
+                        name,
+                        email,
+                        password: hashedPassword,
+                    },
+                });
+                res.status(201).json({id: user.id, name: user.name, email: user.email });
+            }catch (error) {
+                console.error("[API ERROR]", error);
+                return res.status(500).json({ error: "Error al crear el usuario" });
+            }
         } else {
             res.status(405).json({ error: "Method Not Allowed" });
         }
