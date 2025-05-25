@@ -1,7 +1,10 @@
+import { useRouter } from "next/router";
 import { useState } from "react";
 import axios from "axios";
 
 export default function RegisterUser() {
+    const router = useRouter();
+
     const [formData, setFormData] = useState({
         email: "",
         name: "",
@@ -10,6 +13,7 @@ export default function RegisterUser() {
     });
 
     const [error, setError] = useState("");
+
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -29,11 +33,13 @@ export default function RegisterUser() {
 
             const response = await axios.post("/api/users", formData);
             if (response.status === 201) {
-                alert("User registered successfully!");
+                const { name } = response.data;
+                alert(`User registered successfully: ${name}`);
                 setFormData({ email: "", name: "", password: "", confirmPassword:"" }); // Reset form
+
+                router.push("/users"); // Redirect to users page
+
             }
-            const data = await response.data;
-            alert(`User registered successfully: ${data.name}`);
         } catch (error) {
             if (axios.isAxiosError(error) && error.response?.status === 400) {
                 // Handle validation error
@@ -54,7 +60,7 @@ export default function RegisterUser() {
     return (
         <>
             <div className="p-6 max-w-md mx-auto">
-                <h1 className="text-xl mb-4">Register</h1>
+                <h1 className="text-xl mb-4">Register user</h1>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                         <label htmlFor="name" className="block mb-2">Name</label>
@@ -104,11 +110,15 @@ export default function RegisterUser() {
                         required
                         />
                     </div>
-
-                    <button type="submit" className="bg-blue-500 text-white px-4 py-2">
-                    Register
-                    </button>
                     {error && <p>{error}</p>}
+                    <div className="flex justify-between">
+                        <button type="button" onClick={() => router.push("/users")} className="bg-gray-500 text-white px-4 py-2">
+                        Cancel  
+                        </button>
+                        <button type="submit" className="bg-blue-500 text-white px-4 py-2">
+                        Register
+                        </button>
+                    </div>
                 </form>
             </div>
         </>
