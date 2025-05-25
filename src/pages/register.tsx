@@ -9,6 +9,8 @@ export default function RegisterUser() {
         confirmPassword: "",
     });
 
+    const [error, setError] = useState("");
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({
@@ -20,8 +22,11 @@ export default function RegisterUser() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // console.log("Form data:", formData);
-            // return;
+            if(formData.password !== formData.confirmPassword) {
+                setError("The passwords do not match");
+                return;
+            }
+
             const response = await axios.post("/api/users", formData);
             if (response.status === 201) {
                 alert("User registered successfully!");
@@ -30,7 +35,19 @@ export default function RegisterUser() {
             const data = await response.data;
             alert(`User registered successfully: ${data.name}`);
         } catch (error) {
-            console.error("Error registering user:", error);
+            if (axios.isAxiosError(error) && error.response?.status === 400) {
+                // Handle validation error
+                const details = error.response.data.details;
+                if (Array.isArray(details)) {
+                    const errorMessages = details.map((err) => err.message).join(", ");
+                    setError(details.map((d) => d.message).join(" | "));
+                } else {
+                    setError(error.response.data.error || "Invalid data");
+                }
+            } else {
+                setError("An error occurred while registering the user");
+                console.error("Error registering user:", error);
+            }
         }
     }
 
@@ -91,7 +108,7 @@ export default function RegisterUser() {
                     <button type="submit" className="bg-blue-500 text-white px-4 py-2">
                     Register
                     </button>
-                    {/* {message && <p>{message}</p>} */}
+                    {error && <p>{error}</p>}
                 </form>
             </div>
         </>
