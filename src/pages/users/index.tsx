@@ -76,16 +76,14 @@ export default function UsersPage() {
                             <td className="border px-4 py-2">{user.name}</td>
                             <td className="border px-4 py-2">{user.email}</td>
                             <td className="border px-4 py-2">
-                                <Link href={`/users/${user.id}/agenda`} className="text-blue-600 underline">
-                                    View Agenda
+                                <Link href={`/users/${user.id}/contacts`} className="bg-blue-500 text-white px-2 py-1 rounded inline-block">
+                                    Agenda
                                 </Link>
                             </td>
                             <td className="border px-4 py-2">
-                                <Link href={`/users/${user.id}`} className="text-blue-600 underline">
-                                    <button className="bg-blue-500 text-white px-2 py-1 rounded">
-                                        Edit
-                                    </button>
-                                </Link>
+                                <Link href={`/users/${user.id}`}
+                                    className="bg-blue-500 text-white px-2 py-1 rounded inline-block"
+                                    >Edit</Link>
                             </td>
                         </tr>
                     ))}
