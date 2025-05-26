@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import { useState } from "react";
-import axios from "axios";
+import { userService } from "@/services/userService";
 
 export default function RegisterUser() {
     const router = useRouter();
@@ -13,7 +13,6 @@ export default function RegisterUser() {
     });
 
     const [error, setError] = useState("");
-
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -31,24 +30,19 @@ export default function RegisterUser() {
                 return;
             }
 
-            const response = await axios.post("/api/users", formData);
-            if (response.status === 201) {
-                const { name } = response.data;
-                alert(`User registered successfully: ${name}`);
-                setFormData({ email: "", name: "", password: "", confirmPassword:"" }); // Reset form
+            const userData = await userService.createUser(formData);
+            console.log("User registered successfully:", userData);
+            const { name } = userData;
+            alert(`User registered successfully: ${name}`);
+            setFormData({ email: "", name: "", password: "", confirmPassword:"" }); // Reset form
+            router.push("/users"); // Redirect to users page
 
-                router.push("/users"); // Redirect to users page
-
-            }
-        } catch (error) {
-            if (axios.isAxiosError(error) && error.response?.status === 400) {
-                // Handle validation error
-                const details = error.response.data.details;
-                if (Array.isArray(details)) {
-                    const errorMessages = details.map((err) => err.message).join(", ");
-                    setError(details.map((d) => d.message).join(" | "));
+        } catch (error:any) {
+            if (error.status === 400) {
+                if (Array.isArray(error.details)) {
+                    setError(error.details.map((d) => d.message).join(" | "));
                 } else {
-                    setError(error.response.data.error || "Invalid data");
+                    setError(error.message || "Invalid request");
                 }
             } else {
                 setError("An error occurred while registering the user");
@@ -110,7 +104,7 @@ export default function RegisterUser() {
                         required
                         />
                     </div>
-                    {error && <p>{error}</p>}
+                    {error && <p className="text-red-500">{error}</p>}
                     <div className="flex justify-between">
                         <button type="button" onClick={() => router.push("/users")} className="bg-gray-500 text-white px-4 py-2">
                         Cancel  

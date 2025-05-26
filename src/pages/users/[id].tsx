@@ -1,8 +1,8 @@
 //pages/users/[id].tsx
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { User } from "@/types/index"; // Adjust the import path as necessary
+import { User } from "@/types";
+import { userService } from "@/services/userService";
 
 export default function UserDetail() {
     const router = useRouter();
@@ -16,9 +16,7 @@ export default function UserDetail() {
         if (!id) return;
         const fetchUser = async () => {
             try {
-                const res = await fetch(`/api/users/${id}`);
-                if (!res.ok) throw new Error("User not found");
-                const data = await res.json();
+                const data = await userService.getUserById(Number(id));
                 setUser(data);
                 setUserPrev(data);//backup
             } catch (err: any) {
@@ -54,19 +52,17 @@ export default function UserDetail() {
                 delete user?.password;
                 delete user?.confirmPassword;
             }
-            const response = await axios.put(`/api/users/${user?.id}`, user);
-            if (response.status === 200) {
-                alert("User updated successfully");
-                setUserPrev(user); // Update backup
-                router.push("/users");
-            }
-        } catch(error) {
-            if (axios.isAxiosError(error) && error.response?.status === 400) {
-                const details = error.response.data.details;
-                if (Array.isArray(details)) {
-                    setError(details.map((d) => d.message).join(" | "));
+
+            const data = await userService.updateUser(Number(user?.id), user);
+            alert("User updated successfully");
+            setUserPrev(user); // Update backup
+            router.push("/users");
+        } catch(error: any) {
+            if (error.status === 400) {
+                if (Array.isArray(error.details)) {
+                    setError(error.details.map((d) => d.message).join(" | "));
                 } else {
-                    setError(error.response.data.error || "Invalid data");
+                    setError(error.message || "Invalid request");
                 }
             } else {
                 setError("An error occurred while updating the user");
@@ -82,11 +78,9 @@ export default function UserDetail() {
         if (!confirm("Are you sure you want to delete this user?")) return;
 
         try {
-            const response = await axios.delete(`/api/users/${user.id}`);
-            if (response.status === 200) {
-                alert("User deleted successfully");
-                router.push("/users");
-            }
+            await userService.deleteUser(Number(user.id));
+            alert("User deleted successfully");
+            router.push("/users");
         } catch (error) {
             console.error("Error deleting user:", error);
             alert("Failed to delete user");

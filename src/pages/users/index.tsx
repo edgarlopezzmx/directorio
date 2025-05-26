@@ -1,13 +1,9 @@
 //pages/users/index.ts
 import { useEffect, useState } from "react";
 import Link from "next/link"
+import { User } from "@/types";
+import { userService } from "@/services/userService";
 
-
-interface User {
-    id: number;
-    name: string;
-    email: string;
-}
 
 export default function UsersPage() {
     const [users, setUsers] = useState<User[]>([]);
@@ -18,11 +14,7 @@ export default function UsersPage() {
         let isMounted = true;
         const fetchUsers = async () => {
             try {
-                const response = await fetch("/api/users");
-                if (!response.ok) {
-                    throw new Error("Failed to fetch users");
-                }
-                const data = await response.json();
+                const data = await userService.getAllUsers();
                 if (isMounted) {
                     setUsers(data);
                     setError(null);
