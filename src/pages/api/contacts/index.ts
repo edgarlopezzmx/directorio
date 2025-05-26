@@ -1,6 +1,7 @@
 //pages/api/contacts/index.ts
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
+import { contactBaseSchema } from "@/validations/contact";
 
 const prisma = new PrismaClient();
 
@@ -106,7 +107,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).json(contacts);
         } else if (req.method === "POST") {
-            const { name, email, phone, userId } = req.body;
+            const parsed = contactBaseSchema.safeParse(req.body);
+            if (!parsed.success) {
+                return res.status(400).json({ error: parsed.error.format() });
+            }
+            
+            const { name, email, phone, userId } = parsed.data;
+
             if (!userId || !name || !email || !phone) {
                 return res.status(400).json({ error: "All fields are required" });
             }
