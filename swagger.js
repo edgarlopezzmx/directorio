@@ -70,6 +70,34 @@ const options = {
           },
           required: ["error"],
         },
+        Contact:{
+          type: "object",
+          properties: {
+            id: {
+              type: "integer",
+              example: 1,
+            },
+            name: {
+              type: "string",
+              example: "Contacto Ejemplo",
+            },
+            email: {
+              type: "string",
+              format: "email",
+              example: "juan@email.com",
+            },
+            phone: {
+              type: "string",
+              example: "5526104003",
+            },
+            userId: {
+              type: "integer",
+              example: 1,
+            },
+          },
+          required: ["id", "name", "email", "phone", "userId"],
+          description: "Esquema para un contacto en el directorio.",
+        },
       },
     },
   },
