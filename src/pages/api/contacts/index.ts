@@ -4,6 +4,90 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+/**
+ * @openapi
+ * /api/contacts:
+ *   get:
+ *     tags:
+ *       - Contacts
+ *     summary: Obtiene todos los contactos de un usuario
+ *     parameters:
+ *       - in: query
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario para obtener sus contactos
+ *     responses:
+ *       200:
+ *         description: Lista de contactos del usuario
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Contact'
+ *       400:
+ *         description: Error de solicitud, falta userId
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *   post:
+ *     tags:
+ *       - Contacts
+ *     summary: Crea un nuevo contacto
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               phone:
+ *                 type: string
+ *               userId:
+ *                 type: integer
+ *             required:
+ *               - name
+ *               - email
+ *               - phone
+ *               - userId
+ *           example:
+ *             name: "Juan Perez"
+ *             email: "juan@email.com"
+ *             phone: "123456789"
+ *             userId: 1
+ *     responses:
+ *       201:
+ *         description: Contacto creado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Contact'
+ *       400:
+ *         description: Error de solicitud, falta algún campo requerido
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Error interno del servidor
+ *         content:
+ *           application/json:
+ *             schema:
+ *              $ref: '#/components/schemas/Error'
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     try {
 
