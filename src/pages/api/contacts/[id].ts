@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { PrismaClient } from "@prisma/client";
+import { contactBaseSchema } from "@/validations/contact";
 
 const prisma = new PrismaClient();
 
@@ -139,7 +140,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             res.status(200).json(contact);
         } else if (req.method === "PUT") {
-            const { name, email, phone } = req.body;
+            const parsed = contactBaseSchema.safeParse(req.body);
+            if (!parsed.success) {
+                return res.status(400).json({ error: "Invalid request data", details: parsed.error.errors });
+            }
+
+            const { name, email, phone } = parsed.data;
 
             if (!name || !email || !phone) {
                 return res.status(400).json({ error: "All fields are required" });

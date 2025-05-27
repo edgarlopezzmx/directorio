@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else if (req.method === "POST") {
             const parsed = userRegisterSchema.safeParse(req.body);            
             if (!parsed.success) {
-                return res.status(400).json({ error: "Datos inválidos", details: parsed.error.errors });
+                return res.status(400).json({ error: "Invalid data", details: parsed.error.errors });
             }
 
             const { name, email, password } = parsed.data;

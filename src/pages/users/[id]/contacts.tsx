@@ -2,8 +2,9 @@
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { User, Contact } from "@/types/index"; // Adjust the import path as necessary
-
+import { User, Contact } from "@/types";
+import { contactService } from "@/services/contactService";
+import { userService } from "@/services/userService";
 
 export default function UserContacts() {
     const router = useRouter();
@@ -21,9 +22,7 @@ export default function UserContacts() {
         if (!id) return;
         const fetchUser = async () => {
             try {
-                const response = await fetch(`/api/users/${id}`);
-                if (!response.ok) throw new Error("User not found");
-                const data = await response.json();
+                const data = await userService.getUserById(Number(id));
                 if (isMounted) {
                     setUser(data);
                     setError(null);
@@ -39,9 +38,7 @@ export default function UserContacts() {
 
         const fetchContacts = async() => {
             try {
-                const response = await fetch(`/api/contacts?userId=${id}`);
-                if(!response.ok) throw new Error("Contacts not found");
-                const data = await response.json();
+                const data = await contactService.getContactsByUserId(Number(id));
                 if(isMounted){
                     setContacts(data);
                 }
@@ -78,45 +75,57 @@ export default function UserContacts() {
     const handleAddContact = async () => {
         if (!newContact) return;
         try {
-            const response = await axios.post(`/api/contacts`, {
+            const userData = await contactService.createContact({
                 ...newContact,
-                userId: Number(user?.id) // Assuming the contact needs to be associated with the user
+                userId: Number(user?.id) 
             });
-
-            if (response.status === 201) {
-                alert("Contact added successfully");
-                setNewContact(null); // Reset contact input
-
-                setContacts((prev)=>prev ? [...prev, response.data] : [response.data]);
-            }
+            alert("Contact added successfully");
+            setNewContact(null); // Reset contact input
+            setContacts((prev)=>prev ? [...prev, userData] : [userData]);
+            setError(null);
         } catch (error: any) {
-            setError(error.message || "Failed to add contact");
+            if (error.status === 400) {
+                if (Array.isArray(error.details)) {
+                    setError(error.details.map((d) => d.message).join(" | "));
+                } else {
+                    setError(error.message || "Invalid request");
+                }
+            } else {
+                setError(error.message || "Failed to add contact");
+                console.error("Error adding contact:", error);
+            }
         }
     }
 
     const handleUpdateContact = async () => {
         if (!newContact || !newContact.id) return;
         try {
-            const response = await axios.put(`/api/contacts/${newContact.id}`, newContact);
-            if (response.status === 200) {
-                alert("Contact updated successfully");
-                setEditingContact(false);
-                setNewContact({ name: "", phone: "", email: "", id: 0, userId: Number(id) }); // Reset to initial state
-                setContacts((prev) => prev ? prev.map(contact => contact.id === newContact.id ? response.data : contact) : null);
-            }
+            const updatedUser = await contactService.updateContact(newContact);
+            alert("Contact updated successfully");
+            setEditingContact(false);
+            setNewContact({ name: "", phone: "", email: "", id: 0, userId: Number(id) }); // Reset to initial state
+            setContacts((prev) => prev ? prev.map(contact => contact.id === newContact.id ? updatedUser: contact) : null);
+
         } catch (error: any) {
-            setError(error.message || "Failed to update contact");
+            if (error.status === 400) {
+                if (Array.isArray(error.details)) {
+                    setError(error.details.map((d) => d.message).join(" | "));
+                } else {
+                    setError(error.message || "Invalid request");
+                }
+            } else {
+                setError("An error occurred while updating contact");
+                console.error("Error updating contact:", error);
+            }
         }
     };
 
     const handleDeleteContact = async (contactId: number) => {
         if (!confirm("Are you sure you want to delete this contact?")) return;
         try {
-            const response = await axios.delete(`/api/contacts/${contactId}`);
-            if (response.status === 200 || response.status === 204) {
-                alert("Contact deleted successfully");
-                setContacts((prev) => prev ? prev.filter(contact => contact.id !== contactId) : null);
-            }
+            await contactService.deleteContact(contactId);
+            alert("Contact deleted successfully");
+            setContacts((prev) => prev ? prev.filter(contact => contact.id !== contactId) : null);
         } catch (error: any) {
             setError(error.message || "Failed to delete contact");
             console.error("Error deleting contact:", error);
@@ -216,16 +225,16 @@ export default function UserContacts() {
                             <td className="border px-4 py-2">{contact.name}</td>
                             <td className="border px-4 py-2">{contact.email}</td>
                             <td className="border px-4 py-2">{contact.phone}</td>
-                            <td className="border px-4 py-2">
+                            <td className="border px-4 py-2 space-x-2">
+                                <button className="bg-blue-500 text-white px-2 py-1"
+                                    onClick={() => handleEditClick(contact)}>
+                                    Edit
+                                </button>
                                 <button
                                     className="bg-red-500 text-white px-2 py-1"
                                     onClick={() => handleDeleteContact(contact.id)}
                                 >
                                     Delete
-                                </button>
-                                <button className="bg-blue-500 text-white px-2 py-1"
-                                    onClick={() => handleEditClick(contact)}>
-                                    Edit
                                 </button>
                             </td>
                         </tr>

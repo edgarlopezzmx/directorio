@@ -109,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         } else if (req.method === "POST") {
             const parsed = contactBaseSchema.safeParse(req.body);
             if (!parsed.success) {
-                return res.status(400).json({ error: parsed.error.format() });
+                return res.status(400).json({ error: "Invalid data", details: parsed.error.errors });
             }
             
             const { name, email, phone, userId } = parsed.data;
